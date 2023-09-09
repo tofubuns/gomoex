@@ -20,6 +20,8 @@ func SetPrivateIPV4Block(fn func([]string) []string) {
 }
 
 // GetLocalIPV4 获取本机的 IPV4 地址
+//
+// isIntranet 参数表示是否需要返回内网 IP
 func GetLocalIPV4(isIntranet bool) (ip string) {
 	interfaces, err := net.Interfaces()
 	if err != nil {
@@ -34,16 +36,20 @@ func GetLocalIPV4(isIntranet bool) (ip string) {
 			for _, addr := range addrs {
 				if ipnet, ok := addr.(*net.IPNet); ok && !ipnet.IP.IsLoopback() {
 					if ipnet.IP.To4() != nil {
-						// 是否希望获得内网 ip
-						if !isIntranet {
-							return ipnet.IP.String()
+						// 当前 ip 是否为内网 ip
+						intranetIpFlag := ipnet.IP.String() == "127.0.0.1" && !IsIntranetIpv4(ipnet)
+
+						// 如果需要内网 IP，且当前 IP 是内网 IP，则返回
+						if isIntranet && intranetIpFlag {
+							ip = ipnet.IP.String()
+							return
 						}
 
-						if ipnet.IP.String() == "127.0.0.1" && !IsIntranetIpv4(ipnet) {
-							continue
+						// 如果需要外网 IP，且当前 IP 不是内网 IP，则返回
+						if !isIntranet && !intranetIpFlag {
+							ip = ipnet.IP.String()
+							return
 						}
-
-						return ipnet.IP.String()
 					}
 				}
 			}
