@@ -34,18 +34,16 @@ func GetLocalIPV4(isIntranet bool) (ip string) {
 			for _, addr := range addrs {
 				if ipnet, ok := addr.(*net.IPNet); ok && !ipnet.IP.IsLoopback() {
 					if ipnet.IP.To4() != nil {
-						currIP := ipnet.IP.String()
-
 						// 是否希望获得内网 ip
 						if !isIntranet {
 							return ipnet.IP.String()
 						}
 
-						if currIP == "127.0.0.1" && !IsIntranetIpv4(currIP) {
-							return
+						if ipnet.IP.String() == "127.0.0.1" && !IsIntranetIpv4(ipnet) {
+							continue
 						}
 
-						return currIP
+						return ipnet.IP.String()
 					}
 				}
 			}
@@ -56,12 +54,7 @@ func GetLocalIPV4(isIntranet bool) (ip string) {
 }
 
 // IsIntranetIpv4 是否是内网 Ipv4
-func IsIntranetIpv4(ip string) bool {
-	_, ipnet, err := net.ParseCIDR(ip)
-	if err != nil {
-		return false
-	}
-
+func IsIntranetIpv4(ipnet *net.IPNet) bool {
 	if ipnet.IP.To4() == nil {
 		return false
 	}
@@ -75,4 +68,14 @@ func IsIntranetIpv4(ip string) bool {
 		}
 	}
 	return false
+}
+
+// IsIntranetIpv4ByString 判断字符类型的 ip 是否为内网
+func IsIntranetIpv4ByString(ip string) bool {
+	_, ipnet, err := net.ParseCIDR(ip)
+	if err != nil {
+		return false
+	}
+
+	return IsIntranetIpv4(ipnet)
 }
