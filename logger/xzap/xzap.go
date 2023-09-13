@@ -125,6 +125,7 @@ var (
 	// WithClock 可选参数, 指定日志时钟
 	WithClock = zap.WithClock
 
+	Error       = zap.Error
 	Skip        = zap.Skip
 	Binary      = zap.Binary
 	Bool        = zap.Bool
